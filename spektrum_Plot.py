@@ -5,6 +5,8 @@ import os
 
 # Einstellbare Referenzprobe
 REFERENCE_PROBE = 'I'  # Ändere diesen Wert um eine andere Probe als Referenz zu verwenden
+SAVE_VECTOR_FORMAT = True  # True für zusätzliche Vektorgrafik (PDF), False nur PNG
+VECTOR_FORMAT = 'pdf'  # 'pdf' oder 'svg'
 
 # Datei einlesen
 file_path = r'G:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Messergebnisse 1mm\Datenauswertung\Hefe\CSV\Messreihe Hefe Lena Messvorschrift C.csv'
@@ -62,8 +64,15 @@ def create_plot(messtyp, led, ax):
     # Plot formatieren
     ax.set_xlabel('Wellenlänge [nm]', fontsize=10)
     ax.set_ylabel(f'Normierte Intensität (rel. zu Probe {REFERENCE_PROBE} = Wasser)', fontsize=10)
-    ax.set_title(f'{messtyp} - {led}', fontsize=12, fontweight='bold')
-    ax.legend(title='Konzentration', fontsize=8, loc='best')
+    
+    # Titel anpassen basierend auf Dateiname
+    if base_filename.endswith('_merged'):
+        title = f'{messtyp}'
+    else:
+        title = f'{messtyp} - {led}'
+    ax.set_title(title, fontsize=12, fontweight='bold')
+    
+    ax.legend(title='Konzentration', fontsize=8, loc='lower left')
     ax.grid(True, alpha=0.3)
     ax.set_xticks(range(len(wavelengths)))
     ax.set_xticklabels(wavelengths)
@@ -72,9 +81,9 @@ def create_plot(messtyp, led, ax):
 # Vier separate Plots erstellen
 combinations = [
     ('Reflexion', 'WHITE', 'ref_white'),
-    ('Reflexion', 'NIR', 'ref_NIR'),
+    #('Reflexion', 'NIR', 'ref_NIR'),
     ('Transmission', 'WHITE', 'trans_white'),
-    ('Transmission', 'NIR', 'trans_NIR')
+    #('Transmission', 'NIR', 'trans_NIR')
 ]
 
 for messtyp, led, suffix in combinations:
@@ -82,11 +91,18 @@ for messtyp, led, suffix in combinations:
     create_plot(messtyp, led, ax)
     plt.tight_layout()
     
-    # Dateiname erstellen und speichern
+    # PNG speichern
     output_filename = f"{base_filename}_{suffix}.png"
     output_path = os.path.join(output_dir, output_filename)
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"Plot gespeichert: {output_path}")
+    
+    # Vektorgrafik speichern (optional)
+    if SAVE_VECTOR_FORMAT:
+        vector_filename = f"{base_filename}_{suffix}.{VECTOR_FORMAT}"
+        vector_path = os.path.join(output_dir, vector_filename)
+        plt.savefig(vector_path, format=VECTOR_FORMAT, bbox_inches='tight')
+        print(f"Vektorgrafik gespeichert: {vector_path}")
     
     #plt.show()
 
