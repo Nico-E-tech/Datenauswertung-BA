@@ -8,8 +8,8 @@ USE_MEAN_FOR_CV = True  # Set to True to divide by mean, False to use custom val
 CUSTOM_DIVISOR = 1.0    # Custom value to divide by if USE_MEAN_FOR_CV is False
 
 # File paths
-input_file = Path(r"G:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Systemcharakterisierung\Datenverarbeitung\Messvorschrift B\Probe ein und ausstecken\CSV\Reproduzierbarkeitstest Messvorschrift B.csv")
-output_dir = Path(r"G:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Systemcharakterisierung\Datenverarbeitung\Messvorschrift B\Probe ein und ausstecken\Variationskoeffizient")
+input_file = Path(r"G:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Systemcharakterisierung\Datenverarbeitung\Dunkelrauschen ohne Lichtschutz (Noise Floor)\CSV\Dunkelrauschen ohne Lichtschutz.csv")
+output_dir = Path(r"G:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Systemcharakterisierung\Datenverarbeitung\Dunkelrauschen ohne Lichtschutz (Noise Floor)\Variationskoeffizient")
 output_dir.mkdir(exist_ok=True)
 
 # 1. Read CSV file
@@ -47,6 +47,11 @@ for group_name, group_data in groups.items():
     cv_values = {}
     
     for channel in spectral_channels:
+        # If group is NIR-reflection or NIR-transmission, compute only 855nm
+        if group_name in ('ref_NIR', 'trans_NIR') and channel != '855nm':
+            cv_values[channel] = np.nan
+            continue
+
         # 4.1 Calculate mean per spectral channel
         mean_value = group_data[channel].mean()
         
@@ -92,6 +97,9 @@ for i, (group_name, color) in enumerate(zip(df_results.columns, ['blue', 'cyan',
     # Add value labels on top of bars with consistent offset
     for bar in bars:
         height = bar.get_height()
+        # skip NaN / non-finite values
+        if not np.isfinite(height):
+            continue
         ax.text(bar.get_x() + bar.get_width()/2., height + text_offset,
                 f'{height:.2f}%',
                 ha='center', va='bottom', fontsize=8, rotation=90)
@@ -106,7 +114,7 @@ ax.set_ylabel(f'Variationskoeffizient (%)', fontsize=12)
 ax.set_title(f'{input_file.stem}', fontsize=14)
 ax.set_xticks(x)
 ax.set_xticklabels(x_labels, rotation=0, ha='center', fontsize=10)
-ax.legend(fontsize=10)
+ax.legend(fontsize=10, loc='upper right')
 ax.grid(True, alpha=0.3, axis='y')
 
 plt.tight_layout()
