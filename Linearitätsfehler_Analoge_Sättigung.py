@@ -5,21 +5,23 @@ from pathlib import Path
 
 # Pfade zu CSV-Dateien
 base_path = Path(r"g:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Systemcharakterisierung\Datenverarbeitung\Linearitätsfehler analoge Sättigung\CSV")
-output_dir = Path(r"g:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Systemcharakterisierung\Datenverarbeitung\Linearitätsfehler analoge Sättigung\Ergebnisse")
+output_dir = Path(r"g:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Systemcharakterisierung\Datenverarbeitung\Linearitätsfehler analoge Sättigung\Ergebnisse_ohne_analoge_Sättigung")
 output_dir.mkdir(exist_ok=True)
 
 csv_files = {
-    'AGAIN=2': base_path / 'Linearitätsfehler Analoge Sättigung AGAIN=2.csv',
+    #'AGAIN=64': base_path / 'Linearitätsfehler Analoge Sättigung AGAIN=64.csv',
+    'AGAIN=1': base_path / 'Linearitätsfehler Analoge Sättigung AGAIN=1.csv',
 }
 
 # Spektralen Kanal auswählen (z.B. 555nm - Peak der weißen LED)
 channel = '640nm'
 
 # Daten einlesen und verarbeiten
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+fig1, ax1 = plt.subplots(figsize=(12, 8))
+fig2, ax2 = plt.subplots(figsize=(12, 8))
 
-colors = {'AGAIN=2': 'blue'}
-markers = {'AGAIN=2': 'o'}
+colors = {'AGAIN=64': 'blue', 'AGAIN=1': 'green'}
+markers = {'AGAIN=64': 'o', 'AGAIN=1': 's'}
 
 results_data = []
 
@@ -59,31 +61,34 @@ for gain_label, csv_path in csv_files.items():
                            (measured_normalized - expected) / expected * 100, 
                            0)
     
+    # Setze Abweichung bei Intensität = 0 auf 0
+    deviation[intensities == 0] = 0
+    
     # Plot 1: Gemessene Werte vs Erwartete lineare Werte
     ax1.plot(intensities, measured_normalized, marker=markers[gain_label], 
              color=colors[gain_label], linewidth=1.5, markersize=6,
-             label='Gemessen', linestyle='-')
+             label=f'Gemessen', linestyle='-')
     ax1.plot(intensities, expected, color=colors[gain_label], 
              linewidth=1, linestyle='--', alpha=0.5,
-             label='Ideal linear')
+             label=f'Ideal linear')
     
     # Markiere Punkte mit analoger Sättigung
     sat_mask = saturated
     if np.any(sat_mask):
         ax1.scatter(intensities[sat_mask], measured_normalized[sat_mask], 
                    s=150, facecolors='none', edgecolors='red', 
-                   linewidths=2, marker='o', label='Analoge Sättigung')
+                   linewidths=2, marker='o')
     
     # Plot 2: Relative Abweichung
     ax2.plot(intensities, deviation, marker=markers[gain_label], 
              color=colors[gain_label], linewidth=1.5, markersize=6,
-             label='Abweichung')
+             label=f'{gain_label}')
     
     # Markiere Sättigung auch in Plot 2
     if np.any(sat_mask):
         ax2.scatter(intensities[sat_mask], deviation[sat_mask], 
                    s=150, facecolors='none', edgecolors='red', 
-                   linewidths=2, marker='o', label='Analoge Sättigung')
+                   linewidths=2, marker='o')
     
     # Daten für CSV speichern
     for i, intensity in enumerate(intensities):
@@ -97,43 +102,55 @@ for gain_label, csv_path in csv_files.items():
         })
 
 # Plot 1 formatieren
-ax1.set_xlabel('LED Intensität (%)', fontsize=12)
-ax1.set_ylabel(f'Normierte Intensität {channel} (AU)', fontsize=12)
-ax1.set_title(f'Linearitätsfehler bei analoger Sättigung - Kanal {channel}', 
-             fontsize=14, fontweight='bold')
-ax1.legend(fontsize=9, loc='upper left')
+ax1.set_xlabel('LED Intensität (%)', fontsize=16)
+ax1.set_ylabel(f'Normierte Intensität {channel} (AU)', fontsize=16)
+ax1.set_title(f'Linearitätsfehler allgemein - Kanal {channel}', 
+             fontsize=18, fontweight='bold')
+ax1.legend(fontsize=12, loc='upper left')
 ax1.grid(True, alpha=0.3)
 ax1.set_xlim(-5, 105)
-
-# Plot 2 formatieren
-ax2.set_xlabel('LED Intensität (%)', fontsize=12)
-ax2.set_ylabel('Relative Abweichung von Linearität (%)', fontsize=12)
-ax2.set_title('Linearitätsabweichung', fontsize=12, fontweight='bold')
-ax2.legend(fontsize=10)
-ax2.grid(True, alpha=0.3)
-ax2.axhline(y=0, color='black', linestyle='-', linewidth=0.8)
-ax2.set_xlim(-5, 105)
+ax1.tick_params(axis='both', labelsize=14)
 
 # Infobox hinzufügen
 info_text = (
-    'Rote Kreise: Analoge Sättigung aktiv\n'
+    'Rote Kreise: Analoge Sättigung\n'
     'Gestrichelt: Ideale Linearität\n'
     'Durchgezogen: Gemessene Werte'
 )
 ax1.text(0.98, 0.05, info_text, transform=ax1.transAxes, 
-        fontsize=9, verticalalignment='bottom', horizontalalignment='right',
+        fontsize=12, verticalalignment='bottom', horizontalalignment='right',
         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
-plt.tight_layout()
+fig1.tight_layout()
 
-# Speichern
-plt.savefig(output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}.png', 
+# Plot 2 formatieren
+ax2.set_xlabel('LED Intensität (%)', fontsize=16)
+ax2.set_ylabel('Relative Abweichung von Linearität (%)', fontsize=16)
+ax2.set_title('Linearitätsabweichung', fontsize=18, fontweight='bold')
+ax2.grid(True, alpha=0.3)
+ax2.axhline(y=0, color='black', linestyle='-', linewidth=0.8)
+ax2.set_xlim(-5, 105)
+ax2.tick_params(axis='both', labelsize=14)
+
+fig2.tight_layout()
+
+# Speichern - Plot 1
+fig1.savefig(output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_normiert.png', 
            dpi=300, bbox_inches='tight')
-print(f"PNG gespeichert: {output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}.png'}")
+print(f"PNG gespeichert: {output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_normiert.png'}")
 
-plt.savefig(output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}.pdf', 
+fig1.savefig(output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_normiert.pdf', 
            bbox_inches='tight')
-print(f"PDF gespeichert: {output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}.pdf'}")
+print(f"PDF gespeichert: {output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_normiert.pdf'}")
+
+# Speichern - Plot 2
+fig2.savefig(output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_abweichung.png', 
+           dpi=300, bbox_inches='tight')
+print(f"PNG gespeichert: {output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_abweichung.png'}")
+
+fig2.savefig(output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_abweichung.pdf', 
+           bbox_inches='tight')
+print(f"PDF gespeichert: {output_dir / f'Linearitätsfehler_Analoge_Sättigung_{channel}_abweichung.pdf'}")
 
 # CSV mit Ergebnissen speichern
 results_df = pd.DataFrame(results_data)
