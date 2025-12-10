@@ -6,10 +6,10 @@ from matplotlib.legend_handler import HandlerErrorbar
 from matplotlib.container import ErrorbarContainer
 
 # ===== CONFIG =====
-CSV_FILEPATH = r"g:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Messergebnisse 1mm\Datenauswertung\Farbstoff\CSV\Messreihe E122 Messvorschrift_spectrum_merged.csv"
-OUTPUT_DIR = r"g:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Messergebnisse 1mm\Datenauswertung\Farbstoff\Spektrum"
-REFERENCE_PROBE = "E"
-PROBENART = "Farbstoff E122"
+CSV_FILEPATH = r"g:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Messergebnisse 10mm\Datenauswertung\Hefe\CSV\Messreihe Hefe Lena Messvorschrift_spectrum_merged.csv"
+OUTPUT_DIR = r"g:\Meine Ablage\Studium\6. Semester\BA Arbeit\M2 Messergebnisse 10mm\Datenauswertung\Hefe\Spektrum2"
+REFERENCE_PROBE = "I"
+PROBENART = "Hefe"
 # ==================
 
 # Spectral channels to normalize
@@ -67,6 +67,7 @@ def process_measurement_type(df, messtyp):
     
     # Calculate statistics for each Text1 across all groups
     stats = []
+    print(f"\n--- Spannweiten bei 600nm ({messtyp}) ---")
     for text1 in df_normalized['Text1'].unique():
         text1_data = df_normalized[df_normalized['Text1'] == text1]
         
@@ -76,6 +77,10 @@ def process_measurement_type(df, messtyp):
         maxs = text1_data[SPECTRAL_CHANNELS].max()
         ranges = maxs - mins
         
+        # Print range for 600nm specifically
+        if '600nm' in ranges:
+            print(f"Probe {text1}: {ranges['600nm']:.6f}")
+
         stats.append({
             'Text1': text1,
             'Text2': text1_data['Text2'].iloc[0],  # Get concentration label
@@ -94,7 +99,6 @@ def plot_spectrum(stats, messtyp, output_dir, base_filename):
     
     # Sort stats by concentration (reverse order to have highest first)
     stats_sorted = sorted(stats, key=lambda x: x['Text1'])
-    
     # Plot each probe
     for stat in stats_sorted:
         means = stat['means'].values
