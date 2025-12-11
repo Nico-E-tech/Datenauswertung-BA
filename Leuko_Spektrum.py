@@ -47,16 +47,32 @@ data_std = """wavelength,Al4%,L0.008,L0.016,L0.031,L0.063,L0.125,L0.25,L0.5,L1,L
 949.95,0,0.019400109,0.000725238,0.007614996,0.016136539,0.000543928,0.00652714,0.015048683,0.025020701,0.016680468,0.001450475,0.006889758
 1000.05,0,0.018130943,0.018130943,0.035784756,0.017176683,0.016222423,0.021947984,0.023856504,0.026719285,0.030536325,0.013836772,0.014313902"""
 
+# Spannweite (Range: min-max)
+data_range = """wavelength,Al4%,L0.008,L0.016,L0.031,L0.063,L0.125,L0.25,L0.5,L1,L2,L4,L8
+400.15,0,0.166666667,0,0.333333333,0.333333333,0,0.166666667,0,0,0.333333333,0,0
+449.8,0,0.015144231,0.015144231,0.031971154,0.032451923,0.018269231,0.020432692,0.007692308,0.019951923,0.001442308,0.030769231,0
+500.1,0,0.026103029,0.003132364,0.006300001,0.0227308,0.0052841,0.019619601,0.022427441,0.030159581,0.011823967,0.002391602,0.002567974
+550.1,0,0.022144283,0.004570226,0.017255706,0.024138024,0.008835591,0.018175687,0.019775536,0.033051853,0.013718772,0.002379539,0.002347165
+599.85,0,0.022296642,0.004323941,0.016773089,0.022746415,0.009004576,0.01648474,0.022066874,0.03307818,0.015374301,0.000229117,0.000100239
+650,0,0.02611632,0.003574949,0.014379496,0.022294931,0.006239644,0.016387718,0.023900459,0.03507519,0.015784727,3.98498E-05,1.67789E-05
+700.05,0,0.02413077,0.005425997,0.013987623,0.02339005,0.006148231,0.020079121,0.029089514,0.036681575,0.016962615,0.0001651,7.13947E-05
+750.05,0,0.025919054,0.003121103,0.012146388,0.022076829,0.006230939,0.019992338,0.027327494,0.037287983,0.018351036,0.000717366,0.000105164
+800.1,0,0.0233089,0.010260198,0.018139998,0.026059939,0.011724029,0.014380066,0.026957774,0.038609548,0.021252311,0.000966075,8.02832E-05
+849.85,0,0.019084574,0.008820448,0.017677445,0.029994396,0.012804269,0.011250944,0.021143491,0.032613728,0.017933286,0.003362491,4.87318E-05
+899.85,0,0.023764652,0.000456362,0.016429048,0.021685668,0.002974807,0.022006812,0.021964556,0.031531265,0.014857133,0.006473586,0.000202828
+949.95,0,0.028747829,0.000771754,0.012155123,0.025274937,0.002604669,0.006945784,0.018039745,0.030677214,0.015724484,0.008585761,0.000771754
+1000.05,0,0.034482759,0.034482759,0.070114943,0.036781609,0.03908046,0.025287356,0.020689655,0.013793103,0.004597701,0.033333333,0.034482759"""
+
 # 3. Einlesen
 df_mean = pd.read_csv(StringIO(data_mean))
-df_std = pd.read_csv(StringIO(data_std))
+df_range = pd.read_csv(StringIO(data_range))
 
-# Daten synchronisieren: Nur Zeilen in df_std behalten, deren Wellenlänge auch in df_mean vorkommt
-df_std = df_std[df_std['wavelength'].isin(df_mean['wavelength'])]
+# Daten synchronisieren: Nur Zeilen in df_range behalten, deren Wellenlänge auch in df_mean vorkommt
+df_range = df_range[df_range['wavelength'].isin(df_mean['wavelength'])]
 
 # Sicherstellen, dass beide Dataframes nach Wellenlänge sortiert sind und der Index zurückgesetzt wird
 df_mean = df_mean.sort_values('wavelength').reset_index(drop=True)
-df_std = df_std.sort_values('wavelength').reset_index(drop=True)
+df_range = df_range.sort_values('wavelength').reset_index(drop=True)
 
 # 4. Plotten
 fig, ax = plt.subplots(figsize=(14, 9))
@@ -69,9 +85,9 @@ for column in df_mean.columns:
     if column != 'wavelength':
         # Werte und Fehler abrufen
         y_values = df_mean[column]
-        y_errors = df_std[column]
+        y_errors = df_range[column]
         
-        # Plot mit Fehlerbalken
+        # Plot mit Fehlerbalken (Spannweite)
         ax.errorbar(x, y_values, yerr=y_errors, marker='o', label=column, 
                     linewidth=2, markersize=6, capsize=5, elinewidth=1.5)
 
@@ -105,7 +121,7 @@ dummy_eb = temp_ax.errorbar([0], [0], yerr=[0.5], marker='o', color='black',
 plt.close(temp_fig)
 
 new_handles.append(dummy_eb)
-labels.append('Variationskoeffizient')
+labels.append('Spannweite (min-max)')
 
 # Legende erstellen mit HandlerMap
 ax.legend(new_handles, labels, loc='center right', 
